@@ -106,8 +106,8 @@ namespace Rodemeyer.MsBuildToCCNet
             w.WriteStartElement("msbuild");
             if (currentSolution != null)
             {
-                w.WriteAttributeString("solution_name", Path.GetFileName(currentSolution));
-                w.WriteAttributeString("solution_dir", Path.GetDirectoryName(currentSolution));
+                w.WriteAttributeString("solution_name", GetFileName(currentSolution));
+                w.WriteAttributeString("solution_dir", GetDirectoryName(currentSolution));
             }
             w.WriteAttributeString("project_count", XmlConvert.ToString(projects.Count));
 
@@ -155,8 +155,8 @@ namespace Rodemeyer.MsBuildToCCNet
         {
             w.WriteStartElement("project");
             string file = RemoveCommonPrefix(p.File);
-            w.WriteAttributeString("dir", Path.GetDirectoryName(file));
-            w.WriteAttributeString("name", Path.GetFileName(file));
+            w.WriteAttributeString("dir", GetDirectoryName(file));
+            w.WriteAttributeString("name", GetFileName(file));
             WriteErrorsOrWarnings(w, "error", p.Errors);
             if (!buildHasErrors) WriteErrorsOrWarnings(w, "warning", p.Warnings);
             WriteMessages(w, p.Messages);
@@ -172,8 +172,8 @@ namespace Rodemeyer.MsBuildToCCNet
                 w.WriteAttributeString("message", ew.Text);
                 if (ew.File != null)
                 {
-                    w.WriteAttributeString("dir", Path.GetDirectoryName(ew.File));
-                    w.WriteAttributeString("name", Path.GetFileName(ew.File));
+                    w.WriteAttributeString("dir", GetDirectoryName(ew.File));
+                    w.WriteAttributeString("name", GetFileName(ew.File));
                     w.WriteAttributeString("pos", "(" + XmlConvert.ToString(ew.Line) + ", " + XmlConvert.ToString(ew.Column) + ")");
                 }
                 w.WriteEndElement();
@@ -236,6 +236,38 @@ namespace Rodemeyer.MsBuildToCCNet
             }
         }
 
-    }
+        private string GetDirectoryName(string file)
+        {
+            file = file ?? "";
+            try
+            {
+                return Path.GetDirectoryName(file);
+            }
+            catch
+            {
+                int lastSlash = file.LastIndexOf(Path.DirectorySeparatorChar);
+                if (lastSlash != -1)
+                    return file.Remove(lastSlash);
+                else
+                    return "#UnknownPath#";
+            }
+        }
 
+        private string GetFileName(string file)
+        {
+            file = file ?? "";
+            try
+            {
+                return Path.GetFileName(file);
+            }
+            catch
+            {
+                int lastSlash = file.LastIndexOf(Path.DirectorySeparatorChar);
+                if (lastSlash != -1)
+                    return file.Substring(lastSlash + 1);
+                else
+                    return file;
+            }
+        }
+    }
 }
